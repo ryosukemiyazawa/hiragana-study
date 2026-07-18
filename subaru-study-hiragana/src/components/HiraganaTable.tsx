@@ -1,15 +1,18 @@
 import React from 'react';
 import { HIRAGANA_TABLE, DAN_LABELS, GYO_LABELS, SMALL_CHARS, SMALL_CHAR_LABELS } from '../data/hiragana';
 import { HiraganaCell } from './HiraganaCell';
+import { SmallCharCell } from './SmallCharCell';
 
 interface HiraganaTableProps {
-  hiddenCells: Set<string>; // "row-col" 形式
+  hiddenCells: Set<string>; // "row-col" または "small-row-col" 形式
   targetChars: string[];
   filledCells: Set<string>;
-  activeRows: Set<number>; // 問題に含まれる段
-  activeCols: Set<number>; // 問題に含まれる行
+  activeRows: Set<number>; // 問題に含まれる段（通常文字）
+  activeCols: Set<number>; // 問題に含まれる行（通常文字）
   onDrop: (row: number, col: number, droppedChar: string, charIndex: number) => void;
+  onSmallDrop: (row: number, col: number, droppedChar: string, charIndex: number) => void;
   onTapDrop: (row: number, col: number) => void;
+  onSmallTapDrop: (row: number, col: number) => void;
   onCellTap: (char: string) => void;
 }
 
@@ -23,7 +26,9 @@ export function HiraganaTable({
   activeRows,
   activeCols,
   onDrop,
+  onSmallDrop,
   onTapDrop,
+  onSmallTapDrop,
   onCellTap,
 }: HiraganaTableProps) {
   return (
@@ -52,13 +57,18 @@ export function HiraganaTable({
             const smallChar = smallRow[rowIndex] || '';
             const key = `small-${smallColIndex}-${rowIndex}`;
             return (
-              <div
+              <SmallCharCell
                 key={key}
-                className={`hiragana-cell small-cell ${smallChar === '' ? 'empty' : ''}`}
-                onClick={() => smallChar && onCellTap(smallChar)}
-              >
-                {smallChar}
-              </div>
+                char={smallChar}
+                row={smallColIndex}
+                col={rowIndex}
+                isHidden={hiddenCells.has(key)}
+                isTarget={targetChars.includes(smallChar)}
+                isFilled={filledCells.has(key)}
+                onDrop={onSmallDrop}
+                onTapDrop={onSmallTapDrop}
+                onCellTap={onCellTap}
+              />
             );
           })}
           <div className="table-spacer" />

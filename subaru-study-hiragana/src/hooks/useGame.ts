@@ -1,6 +1,13 @@
 import { useState, useCallback } from 'react';
-import { HIRAGANA_TABLE, getHiraganaPosition } from '../data/hiragana';
-import { WORD_LIST } from '../data/words';
+import { HIRAGANA_TABLE, SMALL_CHARS, getCharPosition, getCellKey } from '../data/hiragana';
+import { WORD_LIST as ALL_WORDS } from '../data/words';
+
+// デバッグ確認用
+const DUMMY_WORD = ['ぱとかー'];
+
+// 本番: ALL_WORDS, デバッグ: DUMMY_WORD
+// const WORD_LIST = DUMMY_WORD; void ALL_WORDS;
+const WORD_LIST = ALL_WORDS; void DUMMY_WORD;
 
 type HidingMode = 'char_only' | 'dan' | 'gyo' | 'random';
 
@@ -39,13 +46,21 @@ function generateHiddenCells(word: string, mode: HidingMode): Set<string> {
 
   for (let i = 0; i < chars.length; i++) {
     const char = chars[i];
-    const pos = getHiraganaPosition(char);
+    const pos = getCharPosition(char);
     if (!pos) continue;
+
+    const cellKey = getCellKey(pos);
+
+    // 小さい文字は常にその文字だけ隠す（段・行モードは通常文字のみ）
+    if (pos.type === 'small') {
+      hidden.add(cellKey);
+      continue;
+    }
 
     switch (mode) {
       case 'char_only':
         // その文字だけ隠す
-        hidden.add(`${pos.row}-${pos.col}`);
+        hidden.add(cellKey);
         break;
 
       case 'dan':
@@ -57,7 +72,7 @@ function generateHiddenCells(word: string, mode: HidingMode): Set<string> {
             }
           }
         } else {
-          hidden.add(`${pos.row}-${pos.col}`);
+          hidden.add(cellKey);
         }
         break;
 
@@ -70,13 +85,13 @@ function generateHiddenCells(word: string, mode: HidingMode): Set<string> {
             }
           }
         } else {
-          hidden.add(`${pos.row}-${pos.col}`);
+          hidden.add(cellKey);
         }
         break;
 
       case 'random':
         // その文字を含むランダムな位置を隠す
-        hidden.add(`${pos.row}-${pos.col}`);
+        hidden.add(cellKey);
         // 追加でランダムに2〜5個隠す
         const extraCount = Math.floor(Math.random() * 4) + 2;
         for (let j = 0; j < extraCount; j++) {
@@ -109,6 +124,7 @@ export function useGame() {
     });
   }, []);
 
+  // 通常の50音表へのドロップ
   const handleDrop = useCallback(
     (row: number, col: number, droppedChar: string, charIndex: number) => {
       const expectedChar = HIRAGANA_TABLE[row][col];
@@ -138,17 +154,47 @@ export function useGame() {
     []
   );
 
+  // 小さい文字へのドロップ
+  const handleSmallDrop = useCallback(
+    (row: number, col: number, droppedChar: string, charIndex: number) => {
+      const expectedChar = SMALL_CHARS[row]?.[col] || '';
+
+      if (droppedChar === expectedChar) {
+        // 正解
+        setGameState((prev) => {
+          const newPlacedChars = [...prev.placedChars];
+          newPlacedChars[charIndex] = true;
+
+          const newFilledCells = new Set(prev.filledCells);
+          newFilledCells.add(`small-${row}-${col}`);
+
+          const isComplete = newPlacedChars.every((placed) => placed);
+
+          return {
+            ...prev,
+            placedChars: newPlacedChars,
+            filledCells: newFilledCells,
+            isComplete,
+          };
+        });
+        return true;
+      }
+      return false;
+    },
+    []
+  );
+
   const skipChar = useCallback((charIndex: number) => {
     setGameState((prev) => {
       const char = prev.currentWord[charIndex];
-      const pos = getHiraganaPosition(char);
+      const pos = getCharPosition(char);
       if (!pos) return prev;
 
       const newPlacedChars = [...prev.placedChars];
       newPlacedChars[charIndex] = true;
 
       const newFilledCells = new Set(prev.filledCells);
-      newFilledCells.add(`${pos.row}-${pos.col}`);
+      newFilledCells.add(getCellKey(pos));
 
       const isComplete = newPlacedChars.every((placed) => placed);
 
@@ -181,6 +227,7 @@ export function useGame() {
   return {
     ...gameState,
     handleDrop,
+    handleSmallDrop,
     skipChar,
     nextWord,
     startGame,

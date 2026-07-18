@@ -12,6 +12,7 @@ function App() {
     filledCells,
     isComplete,
     handleDrop,
+    handleSmallDrop,
     skipChar,
     nextWord,
     startGame,
@@ -30,6 +31,7 @@ function App() {
       filledCells={filledCells}
       isComplete={isComplete}
       handleDrop={handleDrop}
+      handleSmallDrop={handleSmallDrop}
       skipChar={skipChar}
       nextWord={nextWord}
       onBack={resetGame}

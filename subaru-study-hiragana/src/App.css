@@ -340,6 +340,10 @@ h1 {
   background: #e8f4f8;
 }
 
+.hiragana-cell.small-cell.empty {
+  background: transparent;
+}
+
 .hiragana-cell.inactive {
   opacity: 0.8;
 }

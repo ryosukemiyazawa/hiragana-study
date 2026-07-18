@@ -3,7 +3,7 @@ import { useSpeech } from '../hooks/useSpeech';
 import { HiraganaTable } from '../components/HiraganaTable';
 import { DraggableChar } from '../components/DraggableChar';
 import Celebration from '../components/effect/Celebration';
-import { HIRAGANA_TABLE, getHiraganaPosition } from '../data/hiragana';
+import { HIRAGANA_TABLE, SMALL_CHARS, getCharPosition } from '../data/hiragana';
 
 interface GameSceneProps {
   currentWord: string;
@@ -12,6 +12,7 @@ interface GameSceneProps {
   filledCells: Set<string>;
   isComplete: boolean;
   handleDrop: (row: number, col: number, char: string, charIndex: number) => boolean;
+  handleSmallDrop: (row: number, col: number, char: string, charIndex: number) => boolean;
   skipChar: (index: number) => void;
   nextWord: () => void;
   onBack: () => void;
@@ -24,6 +25,7 @@ export function GameScene({
   filledCells,
   isComplete,
   handleDrop,
+  handleSmallDrop,
   skipChar,
   nextWord,
   onBack,
@@ -40,12 +42,12 @@ export function GameScene({
   const selectedCharIndex = placedChars.findIndex((placed) => !placed);
   const autoSelectedIndex = selectedCharIndex === -1 ? null : selectedCharIndex;
 
-  // 問題に含まれる行と段を計算
+  // 問題に含まれる行と段を計算（通常文字のみ、小さい文字は別扱い）
   const activeRows = new Set<number>();
   const activeCols = new Set<number>();
   for (const char of targetChars) {
-    const pos = getHiraganaPosition(char);
-    if (pos) {
+    const pos = getCharPosition(char);
+    if (pos && pos.type === 'normal') {
       activeRows.add(pos.row);
       activeCols.add(pos.col);
     }
@@ -105,6 +107,22 @@ export function GameScene({
     [autoSelectedIndex, currentWord, handleDrop]
   );
 
+  // 小さい文字セルのタップ処理
+  const handleSmallTapDrop = useCallback(
+    (row: number, col: number) => {
+      if (autoSelectedIndex === null) return;
+
+      const char = currentWord[autoSelectedIndex];
+      const expectedChar = SMALL_CHARS[row]?.[col] || '';
+
+      if (char === expectedChar) {
+        handleSmallDrop(row, col, char, autoSelectedIndex);
+        setShowSkipButton(false);
+      }
+    },
+    [autoSelectedIndex, currentWord, handleSmallDrop]
+  );
+
   const handleSkipChar = useCallback(
     (index: number) => {
       const char = currentWord[index];
@@ -137,6 +155,17 @@ export function GameScene({
       }
     },
     [handleDrop, speak]
+  );
+
+  // 小さい文字へのドラッグ＆ドロップ時の処理
+  const handleSmallDropWithSpeak = useCallback(
+    (row: number, col: number, droppedChar: string, charIndex: number) => {
+      const success = handleSmallDrop(row, col, droppedChar, charIndex);
+      if (success) {
+        speak(droppedChar);
+      }
+    },
+    [handleSmallDrop, speak]
   );
 
   return (
@@ -195,7 +224,9 @@ export function GameScene({
         activeRows={activeRows}
         activeCols={activeCols}
         onDrop={handleDropWithSpeak}
+        onSmallDrop={handleSmallDropWithSpeak}
         onTapDrop={handleTapDrop}
+        onSmallTapDrop={handleSmallTapDrop}
         onCellTap={handleCellTap}
       />
 

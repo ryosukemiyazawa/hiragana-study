@@ -1,10 +1,10 @@
-const CACHE_NAME = 'hiragana-study-v2';
+const CACHE_NAME = 'hiragana-study-v3';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
 ];
 
 // インストール時にキャッシュ
