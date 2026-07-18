@@ -1,4 +1,5 @@
 import type { DragEvent, TouchEvent } from 'react';
+import { getCharPosition, getRowColor, getSmallCharColor } from '../data/hiragana';
 
 interface DraggableCharProps {
   char: string;
@@ -39,9 +40,21 @@ export function DraggableChar({
     e.stopPropagation();
   };
 
+  // 文字の色を取得
+  const pos = getCharPosition(char);
+  let charColor: string | undefined;
+  if (pos) {
+    if (pos.type === 'small') {
+      charColor = getSmallCharColor(char);
+    } else {
+      charColor = getRowColor(pos.col);
+    }
+  }
+  const bgStyle = charColor ? { backgroundColor: charColor } : {};
+
   if (isPlaced) {
     return (
-      <div className="draggable-char placed">
+      <div className="draggable-char placed" style={bgStyle}>
         <span className="placed-char">{char}</span>
         <span className="placed-check">✓</span>
       </div>
@@ -51,6 +64,7 @@ export function DraggableChar({
   return (
     <div
       className={`draggable-char ${isSelected ? 'selected' : ''}`}
+      style={bgStyle}
       draggable
       onDragStart={handleDragStart}
       onClick={handleClick}

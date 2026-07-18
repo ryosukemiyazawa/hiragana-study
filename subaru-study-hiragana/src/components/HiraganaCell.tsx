@@ -1,4 +1,5 @@
 import type { DragEvent, TouchEvent } from 'react';
+import { getRowColor } from '../data/hiragana';
 
 interface HiraganaCellProps {
   char: string;
@@ -7,6 +8,7 @@ interface HiraganaCellProps {
   isHidden: boolean;
   isTarget: boolean;
   isFilled: boolean;
+  isRevealed: boolean; // 間違いで一時的に表示されるセル
   isInactive: boolean; // 問題に含まれない行・段
   onDrop: (row: number, col: number, droppedChar: string, charIndex: number) => void;
   onTapDrop: (row: number, col: number) => void;
@@ -20,6 +22,7 @@ export function HiraganaCell({
   isHidden,
   isTarget,
   isFilled,
+  isRevealed,
   isInactive,
   onDrop,
   onTapDrop,
@@ -61,16 +64,28 @@ export function HiraganaCell({
     handleClick();
   };
 
+  // 行の色を取得
+  const rowColor = getRowColor(col);
+  const colorStyle = rowColor ? { color: rowColor } : {};
+  // hiddenの場合はデフォルト色（青系）をフォールバックとして使用
+  const hiddenStyle = { backgroundColor: rowColor || '#0984e3', color: '#fff' };
+
   // 空のセル（やゆよ、わをんの空き）
   if (char === '') {
     return <div className="hiragana-cell empty" />;
   }
 
-  // 隠されているセル（ドロップ対象）
-  if (isHidden && !isFilled) {
+  // 状態判定:
+  // - hidden: isHidden && !isFilled && !isRevealed（背景色＋白テキスト「？」）
+  // - active: isTarget && (isFilled || isRevealed)（背景色＋白テキスト「文字」）
+  // - plain: それ以外（通常表示）
+
+  // hidden状態: 隠れていて未正解、かつrevealされていない
+  if (isHidden && !isFilled && !isRevealed) {
     return (
       <div
         className={`hiragana-cell hidden ${isTarget ? 'target' : ''}`}
+        style={hiddenStyle}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         onClick={handleClick}
@@ -81,11 +96,12 @@ export function HiraganaCell({
     );
   }
 
-  // 正解して埋まったセル（ターゲットなら再度タップ可能）
-  if (isFilled) {
+  // active状態: 問題に含まれていて、正解済みまたはrevealされた
+  if (isTarget && (isFilled || isRevealed)) {
     return (
       <div
-        className={`hiragana-cell filled ${isTarget ? 'target-filled' : ''}`}
+        className={`hiragana-cell active ${isFilled ? 'filled' : 'revealed'}`}
+        style={hiddenStyle}
         onClick={handleClick}
         onTouchEnd={handleTouchEnd}
       >
@@ -94,10 +110,11 @@ export function HiraganaCell({
     );
   }
 
-  // 通常のセル
+  // plain状態: 通常のセル（ダミーが開かれた、または問題に含まれない正解済み）
   return (
     <div
       className={`hiragana-cell ${isInactive ? 'inactive' : ''}`}
+      style={colorStyle}
       onClick={handleClick}
       onTouchEnd={handleTouchEnd}
     >

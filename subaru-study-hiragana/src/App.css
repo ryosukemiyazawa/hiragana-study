@@ -144,7 +144,7 @@ h1 {
 .draggable-char {
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+  /* 背景色はインラインスタイルで文字ごとに設定 */
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -170,7 +170,7 @@ h1 {
 }
 
 .draggable-char.placed {
-  background: #48c774;
+  /* 背景色はインラインスタイルで文字ごとに設定 */
   cursor: default;
   position: relative;
 }
@@ -200,6 +200,40 @@ h1 {
   50% {
     transform: scale(1.1) translateY(-5px);
   }
+}
+
+/* トップメニュー（スタート画面の右上） */
+.top-menu {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 100;
+}
+
+.menu-button {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.menu-button:active {
+  transform: scale(0.95);
 }
 
 /* 戻るボタン（左上に固定表示） */
@@ -350,13 +384,18 @@ h1 {
   background: transparent;
 }
 
+.hiragana-cell.small-cell.disabled {
+  background: #d0d0d0;
+  color: #999;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .hiragana-cell.inactive {
   opacity: 0.8;
 }
 
 .hiragana-cell.hidden {
-  background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
-  color: white;
   cursor: pointer;
   font-size: 1.2rem;
 }
@@ -379,18 +418,22 @@ h1 {
   }
 }
 
-.hiragana-cell.filled {
-  background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+/* active状態: 問題に含まれていて正解済みまたはreveal済み */
+.hiragana-cell.active {
+  /* 背景色はインラインスタイルで行の色を設定 */
   color: white;
-  animation: pop 0.3s ease-out;
+  cursor: pointer;
 }
 
-.hiragana-cell.filled.target-filled {
-  cursor: pointer;
+.hiragana-cell.active.filled {
   animation: pop 0.3s ease-out, pulse 1.5s infinite 0.3s;
 }
 
-.hiragana-cell.filled.target-filled:hover {
+.hiragana-cell.active.revealed {
+  /* revealされたセル（間違いで開いた） */
+}
+
+.hiragana-cell.active:hover {
   transform: scale(1.05);
 }
 
@@ -596,6 +639,283 @@ h1 {
 
 .emoji-button:active {
   background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+  transform: scale(1.05);
+}
+
+/* 統計画面 */
+.stats-summary {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stats-summary p {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.stats-empty {
+  background: white;
+  border-radius: 16px;
+  padding: 40px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stats-empty p {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+/* 並び順ボタン */
+.sort-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.sort-button {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.sort-button:hover {
+  background: white;
+  transform: scale(1.05);
+}
+
+.sort-button.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 統計リスト */
+.stats-list {
+  background: white;
+  border-radius: 16px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.stats-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.stats-item:last-child {
+  border-bottom: none;
+}
+
+.stats-char {
+  font-size: 1.5rem;
+  width: 40px;
+  text-align: center;
+}
+
+.stats-bar-container {
+  flex: 1;
+  height: 20px;
+  background: #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.stats-bar {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.stats-bar.correct {
+  background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+}
+
+.stats-numbers {
+  font-size: 0.9rem;
+  color: #666;
+  min-width: 80px;
+  text-align: right;
+}
+
+.stats-percent {
+  color: #999;
+  font-size: 0.8rem;
+  margin-left: 4px;
+}
+
+/* 統計アクション */
+.stats-actions {
+  margin-top: 20px;
+}
+
+.reset-button {
+  background: linear-gradient(135deg, #636e72 0%, #2d3436 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+}
+
+.reset-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.reset-button:active {
+  transform: scale(0.98);
+}
+
+/* 設定画面 */
+.settings-section {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: left;
+}
+
+.settings-section h2 {
+  margin: 0 0 10px 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.settings-description {
+  margin: 0 0 15px 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.settings-note {
+  margin: 15px 0 0 0;
+  font-size: 0.9rem;
+  color: #999;
+  text-align: center;
+}
+
+.voice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.voice-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 15px;
+  background: #f5f5f5;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  font-family: inherit;
+}
+
+.voice-item:hover {
+  background: #eee;
+}
+
+.voice-item.active {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-color: #667eea;
+}
+
+.voice-name {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.voice-detail {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+/* 確認ダイアログ */
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.confirm-dialog {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.confirm-dialog p {
+  margin: 0 0 20px 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.confirm-yes {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 30px;
+  font-size: 1rem;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.confirm-no {
+  background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 30px;
+  font-size: 1rem;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.confirm-yes:hover,
+.confirm-no:hover {
   transform: scale(1.05);
 }
 

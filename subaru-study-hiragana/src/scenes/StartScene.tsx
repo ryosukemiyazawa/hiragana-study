@@ -1,32 +1,35 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSpeech } from '../hooks/useSpeech';
-import { StartHiraganaTable } from '../components/StartHiraganaTable';
+import { HiraganaTable } from '../components/HiraganaTable';
 import { EmojiKeyboard } from '../components/EmojiKeyboard';
+import { SECRET_MESSAGES } from "../data/messages";
 
 interface StartSceneProps {
   onStart: () => void;
+  onShowStats: () => void;
+  onShowSettings: () => void;
+  voiceURI: string | null;
 }
 
-// 隠しメッセージ
-const SECRET_MESSAGES: Record<string, string> = {
-  'すばる': 'かわいい',
-  'まま': 'だいすき',
-  'かわいい': 'ありがとう',
-};
-
-export function StartScene({ onStart }: StartSceneProps) {
-  const { speak } = useSpeech();
+export function StartScene({ onStart, onShowStats, onShowSettings, voiceURI }: StartSceneProps) {
+  const { speak } = useSpeech({ voiceURI });
   const [inputChars, setInputChars] = useState<string[]>([]);
   const [showEmojiKeyboard, setShowEmojiKeyboard] = useState(false);
 
-  // 「えもじ」と入力したら絵文字キーボードを表示
+  // 特殊入力の処理
   useEffect(() => {
     const inputText = inputChars.join('');
     if (inputText === 'えもじ') {
       setShowEmojiKeyboard(true);
       setInputChars([]);
+    } else if (inputText === 'とうけい') {
+      setInputChars([]);
+      onShowStats();
+    } else if (inputText === 'せってい') {
+      setInputChars([]);
+      onShowSettings();
     }
-  }, [inputChars]);
+  }, [inputChars, onShowStats, onShowSettings]);
 
   const handleStartGame = useCallback(() => {
     const inputText = inputChars.join('');
@@ -34,7 +37,11 @@ export function StartScene({ onStart }: StartSceneProps) {
 
     if (secretMessage) {
       // 隠しメッセージを読み上げ
-      speak(secretMessage);
+      // SECRET_MESSAGESは配列なのでランダムに1件取り出し
+      const secretMessageOne = secretMessage[
+        Math.floor(Math.random() * secretMessage.length)
+      ];
+      speak(secretMessageOne);
     } else {
       const textToSpeak = inputChars.length > 0 ? inputText : 'はじめる';
       speak(textToSpeak);
@@ -60,7 +67,18 @@ export function StartScene({ onStart }: StartSceneProps) {
   }, []);
 
   const handlePlayInputChars = useCallback(() => {
-    if (inputChars.length > 0) {
+    const inputText = inputChars.join('');
+    const secretMessage = SECRET_MESSAGES[inputText];
+
+    if (secretMessage) {
+      // 隠しメッセージを読み上げ
+      // SECRET_MESSAGESは配列なのでランダムに1件取り出し
+      const secretMessageOne = secretMessage[
+        Math.floor(Math.random() * secretMessage.length)
+      ];
+      speak(secretMessageOne);
+    }else if (inputChars.length > 0) {
+
       speak(inputChars.join(''));
     }
   }, [inputChars, speak]);
@@ -71,6 +89,16 @@ export function StartScene({ onStart }: StartSceneProps) {
 
   return (
     <div className="game-container">
+      {/* 右上のメニューボタン */}
+      <div className="top-menu">
+        <button className="menu-button" onClick={onShowStats} title="統計">
+          📊
+        </button>
+        <button className="menu-button" onClick={onShowSettings} title="設定">
+          ⚙️
+        </button>
+      </div>
+
       <h1>ひらがながくしゅう</h1>
       <p className="build-time">{__BUILD_TIME__}</p>
       <div className="start-area">
@@ -93,7 +121,7 @@ export function StartScene({ onStart }: StartSceneProps) {
       {showEmojiKeyboard ? (
         <EmojiKeyboard onEmojiTap={handleEmojiTap} onBack={handleBackToHiragana} />
       ) : (
-        <StartHiraganaTable onCharTap={handleStartCharTap} />
+        <HiraganaTable mode="start" onCellTap={handleStartCharTap} />
       )}
     </div>
   );

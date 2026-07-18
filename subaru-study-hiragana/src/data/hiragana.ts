@@ -23,6 +23,54 @@ export const DAN_LABELS = ['あ', 'い', 'う', 'え', 'お'];
 // 行のラベル（横のラベル、右から左）
 export const GYO_LABELS = ['ぱ', 'ば', 'だ', 'ざ', 'が', 'わ', 'ら', 'や', 'ま', 'は', 'な', 'た', 'さ', 'か', 'あ'];
 
+// 各行の色（清音行をキーとして定義）
+export const HIRAGANA_ROW_COLORS: Record<string, string> = {
+  "あ": "#F36C5B",
+  "か": "#E84A8A",
+  "さ": "#B86AD9",
+  "た": "#7C6AD6",
+  "な": "#5568D9",
+  "は": "#2F9FE8",
+  "ま": "#2CBCC5",
+  "や": "#43B64A",
+  "ら": "#73C043",
+  "わ": "#E6B52D",
+};
+
+// 濁音・半濁音から清音への対応（色を取得するため）
+const DAKUTEN_TO_SEION: Record<string, string> = {
+  "が": "か", "ざ": "さ", "だ": "た", "ば": "は", "ぱ": "は",
+};
+
+// 行インデックスから色を取得
+export function getRowColor(colIndex: number): string | undefined {
+  const gyoLabel = GYO_LABELS[colIndex];
+  if (!gyoLabel) return undefined;
+
+  // 清音行の場合はそのまま
+  if (HIRAGANA_ROW_COLORS[gyoLabel]) {
+    return HIRAGANA_ROW_COLORS[gyoLabel];
+  }
+
+  // 濁音・半濁音行の場合は清音の色を使う
+  const seion = DAKUTEN_TO_SEION[gyoLabel];
+  if (seion) {
+    return HIRAGANA_ROW_COLORS[seion];
+  }
+
+  return undefined;
+}
+
+// 小さい文字から色を取得（元の行の色を使用）
+// っ→た行、ゃゅょ→や行、ぁぃぅぇぉ→あ行
+export function getSmallCharColor(char: string): string | undefined {
+  if (char === 'っ') return HIRAGANA_ROW_COLORS["た"];
+  if (char === 'ゃ' || char === 'ゅ' || char === 'ょ') return HIRAGANA_ROW_COLORS["や"];
+  if (char === 'ぁ' || char === 'ぃ' || char === 'ぅ' || char === 'ぇ' || char === 'ぉ') return HIRAGANA_ROW_COLORS["あ"];
+  if (char === 'ー') return HIRAGANA_ROW_COLORS["わ"]; // 長音符は特別にわ行の色
+  return undefined;
+}
+
 // ひらがなから位置を取得
 export function getHiraganaPosition(char: string): { row: number; col: number } | null {
   for (let row = 0; row < HIRAGANA_TABLE.length; row++) {

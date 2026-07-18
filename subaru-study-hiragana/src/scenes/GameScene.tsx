@@ -11,11 +11,16 @@ interface GameSceneProps {
   hiddenCells: Set<string>;
   filledCells: Set<string>;
   isComplete: boolean;
+  activeSmallCharRows: Set<number>;
   handleDrop: (row: number, col: number, char: string, charIndex: number) => boolean;
   handleSmallDrop: (row: number, col: number, char: string, charIndex: number) => boolean;
   skipChar: (index: number) => void;
   nextWord: () => void;
   onBack: () => void;
+  recordCorrect: (char: string) => void;
+  recordWrong: (char: string) => void;
+  incrementWrongCount: () => void;
+  voiceURI: string | null;
 }
 
 export function GameScene({
@@ -24,19 +29,28 @@ export function GameScene({
   hiddenCells,
   filledCells,
   isComplete,
+  activeSmallCharRows,
   handleDrop,
   handleSmallDrop,
   skipChar,
   nextWord,
   onBack,
+  recordCorrect,
+  recordWrong,
+  incrementWrongCount,
+  voiceURI,
 }: GameSceneProps) {
-  const { speak } = useSpeech();
+  const { speak } = useSpeech({ voiceURI });
 
   const [showSkipButton, setShowSkipButton] = useState(false);
+  const [revealedCells, setRevealedCells] = useState<Set<string>>(new Set());
   const prevWordRef = useRef<string | null>(null);
   const skipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const targetChars = currentWord.split('');
+  const allChars = currentWord.split('');
+
+  // まだ配置されていない文字のみをターゲットとして扱う
+  const targetChars = allChars.filter((_, index) => !placedChars[index]);
 
   // 最初の未配置文字を自動選択
   const selectedCharIndex = placedChars.findIndex((placed) => !placed);
@@ -53,11 +67,12 @@ export function GameScene({
     }
   }
 
-  // 問題が変わったら読み上げる
+  // 問題が変わったら読み上げる＆revealedCellsをリセット
   useEffect(() => {
     if (currentWord && currentWord !== prevWordRef.current) {
       speak(currentWord);
       prevWordRef.current = currentWord;
+      setRevealedCells(new Set());
     }
   }, [currentWord, speak]);
 
@@ -96,15 +111,24 @@ export function GameScene({
 
       const char = currentWord[autoSelectedIndex];
       const expectedChar = HIRAGANA_TABLE[row][col];
+      const cellKey = `${row}-${col}`;
 
       if (char === expectedChar) {
         handleDrop(row, col, char, autoSelectedIndex);
         // 読み上げはHiraganaCell側のonCellTapで行う
         // 選択は自動で次に移動するのでsetSelectedCharIndexは不要
         setShowSkipButton(false);
+        // 正解を記録
+        recordCorrect(char);
+      } else {
+        // 間違いを記録（探している文字を記録）
+        recordWrong(char);
+        incrementWrongCount();
+        // 間違ったセルを一時的に表示
+        setRevealedCells(prev => new Set(prev).add(cellKey));
       }
     },
-    [autoSelectedIndex, currentWord, handleDrop]
+    [autoSelectedIndex, currentWord, handleDrop, recordCorrect, recordWrong, incrementWrongCount]
   );
 
   // 小さい文字セルのタップ処理
@@ -114,13 +138,22 @@ export function GameScene({
 
       const char = currentWord[autoSelectedIndex];
       const expectedChar = SMALL_CHARS[row]?.[col] || '';
+      const cellKey = `small-${row}-${col}`;
 
       if (char === expectedChar) {
         handleSmallDrop(row, col, char, autoSelectedIndex);
         setShowSkipButton(false);
+        // 正解を記録
+        recordCorrect(char);
+      } else {
+        // 間違いを記録（探している文字を記録）
+        recordWrong(char);
+        incrementWrongCount();
+        // 間違ったセルを一時的に表示
+        setRevealedCells(prev => new Set(prev).add(cellKey));
       }
     },
-    [autoSelectedIndex, currentWord, handleSmallDrop]
+    [autoSelectedIndex, currentWord, handleSmallDrop, recordCorrect, recordWrong, incrementWrongCount]
   );
 
   const handleSkipChar = useCallback(
@@ -186,7 +219,7 @@ export function GameScene({
           </button>
         </div>
         <div className="word-chars">
-          {targetChars.map((char, index) => (
+          {allChars.map((char, index) => (
             <DraggableChar
               key={index}
               char={char}
@@ -218,11 +251,14 @@ export function GameScene({
 
       {/* 50音表 */}
       <HiraganaTable
+        mode="game"
         hiddenCells={hiddenCells}
         targetChars={targetChars}
         filledCells={filledCells}
+        revealedCells={revealedCells}
         activeRows={activeRows}
         activeCols={activeCols}
+        activeSmallCharRows={activeSmallCharRows}
         onDrop={handleDropWithSpeak}
         onSmallDrop={handleSmallDropWithSpeak}
         onTapDrop={handleTapDrop}

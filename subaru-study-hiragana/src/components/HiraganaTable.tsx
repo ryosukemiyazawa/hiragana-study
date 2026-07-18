@@ -1,14 +1,18 @@
 import React from 'react';
-import { HIRAGANA_TABLE, DAN_LABELS, GYO_LABELS, SMALL_CHARS, SMALL_CHAR_LABELS } from '../data/hiragana';
+import { HIRAGANA_TABLE, SMALL_CHARS } from '../data/hiragana';
 import { HiraganaCell } from './HiraganaCell';
 import { SmallCharCell } from './SmallCharCell';
 
-interface HiraganaTableProps {
-  hiddenCells: Set<string>; // "row-col" または "small-row-col" 形式
+// ゲーム用のprops
+interface GameModeProps {
+  mode: 'game';
+  hiddenCells: Set<string>;
   targetChars: string[];
   filledCells: Set<string>;
-  activeRows: Set<number>; // 問題に含まれる段（通常文字）
-  activeCols: Set<number>; // 問題に含まれる行（通常文字）
+  revealedCells: Set<string>;
+  activeRows: Set<number>;
+  activeCols: Set<number>;
+  activeSmallCharRows: Set<number>;
   onDrop: (row: number, col: number, droppedChar: string, charIndex: number) => void;
   onSmallDrop: (row: number, col: number, droppedChar: string, charIndex: number) => void;
   onTapDrop: (row: number, col: number) => void;
@@ -16,39 +20,39 @@ interface HiraganaTableProps {
   onCellTap: (char: string) => void;
 }
 
+// スタート画面用のprops
+interface StartModeProps {
+  mode: 'start';
+  onCellTap: (char: string) => void;
+}
+
+type HiraganaTableProps = GameModeProps | StartModeProps;
+
 // 濁点・半濁点行と清音行の境界（わ行の前に余白を入れる）
 const DAKUTEN_BOUNDARY = 5; // わ行のインデックス
 
-export function HiraganaTable({
-  hiddenCells,
-  targetChars,
-  filledCells,
-  activeRows,
-  activeCols,
-  onDrop,
-  onSmallDrop,
-  onTapDrop,
-  onSmallTapDrop,
-  onCellTap,
-}: HiraganaTableProps) {
+// 空のダミー関数
+const noop = () => {};
+
+export function HiraganaTable(props: HiraganaTableProps) {
+  const { mode, onCellTap } = props;
+
+  // スタートモード用のデフォルト値
+  const isStartMode = mode === 'start';
+  const hiddenCells = isStartMode ? new Set<string>() : props.hiddenCells;
+  const targetChars = isStartMode ? [] : props.targetChars;
+  const filledCells = isStartMode ? new Set<string>() : props.filledCells;
+  const revealedCells = isStartMode ? new Set<string>() : props.revealedCells;
+  const activeRows = isStartMode ? new Set<number>([0, 1, 2, 3, 4]) : props.activeRows;
+  const activeCols = isStartMode ? new Set<number>(Array.from({ length: 15 }, (_, i) => i)) : props.activeCols;
+  const activeSmallCharRows = isStartMode ? new Set<number>([0, 1, 2]) : props.activeSmallCharRows;
+  const onDrop = isStartMode ? noop : props.onDrop;
+  const onSmallDrop = isStartMode ? noop : props.onSmallDrop;
+  const onTapDrop = isStartMode ? noop : props.onTapDrop;
+  const onSmallTapDrop = isStartMode ? noop : props.onSmallTapDrop;
+
   return (
     <div className="hiragana-table">
-      {/* 行ラベル */}
-      <div className="table-row header-row">
-        {/* 小さい文字のラベル */}
-        {SMALL_CHAR_LABELS.map((label, i) => (
-          <div key={`small-${i}`} className="gyo-label small-label">{label}</div>
-        ))}
-        <div className="table-spacer" />
-        {GYO_LABELS.map((label, i) => (
-          <React.Fragment key={i}>
-            {i === DAKUTEN_BOUNDARY && <div className="table-spacer" />}
-            <div className="gyo-label">{label}</div>
-          </React.Fragment>
-        ))}
-        <div className="dan-label"></div>
-      </div>
-
       {/* 50音表（縦書き形式） */}
       {HIRAGANA_TABLE.map((row, rowIndex) => (
         <div key={rowIndex} className="table-row">
@@ -65,6 +69,8 @@ export function HiraganaTable({
                 isHidden={hiddenCells.has(key)}
                 isTarget={targetChars.includes(smallChar)}
                 isFilled={filledCells.has(key)}
+                isRevealed={revealedCells.has(key)}
+                isDisabled={!activeSmallCharRows.has(smallColIndex)}
                 onDrop={onSmallDrop}
                 onTapDrop={onSmallTapDrop}
                 onCellTap={onCellTap}
@@ -84,6 +90,7 @@ export function HiraganaTable({
                   isHidden={hiddenCells.has(key)}
                   isTarget={targetChars.includes(char)}
                   isFilled={filledCells.has(key)}
+                  isRevealed={revealedCells.has(key)}
                   isInactive={!activeRows.has(rowIndex) && !activeCols.has(colIndex)}
                   onDrop={onDrop}
                   onTapDrop={onTapDrop}
@@ -92,7 +99,6 @@ export function HiraganaTable({
               </React.Fragment>
             );
           })}
-          <div className="dan-label">{DAN_LABELS[rowIndex]}</div>
         </div>
       ))}
     </div>

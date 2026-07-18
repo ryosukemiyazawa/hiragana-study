@@ -1,19 +1,15 @@
 // 音声再生のカスタムフック
 // 現在はWeb Speech APIを使用。後でwavファイルに差し替え可能な設計
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 
-export function useSpeech() {
-  
+interface UseSpeechOptions {
+  voiceURI?: string | null;
+}
+
+export function useSpeech(options: UseSpeechOptions = {}) {
+  const { voiceURI = null } = options;
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-
-  // 音声リストを取得（Chromeでは非同期で読み込まれる）
-  useEffect(() => {
-    if (!('speechSynthesis' in window)) {
-      console.error("speechSynthesisが利用できません");
-      return;
-    }
-  }, []);
 
   const speak = useCallback(
     (text: string) => {
@@ -38,12 +34,22 @@ export function useSpeech() {
 
         // その場で最新の音声リストを取得
         const currentVoices = speechSynthesis.getVoices();
-        const japaneseVoice = currentVoices.find(
-          (voice) => voice.lang === 'ja-JP' || voice.lang.startsWith('ja')
-        );
-        
-        if (japaneseVoice) {
-          utterance.voice = japaneseVoice;
+
+        // 設定されたVoiceを使用、なければデフォルトの日本語Voice
+        let selectedVoice: SpeechSynthesisVoice | undefined;
+
+        if (voiceURI) {
+          selectedVoice = currentVoices.find(voice => voice.voiceURI === voiceURI);
+        }
+
+        if (!selectedVoice) {
+          selectedVoice = currentVoices.find(
+            voice => voice.lang === 'ja-JP' || voice.lang.startsWith('ja')
+          );
+        }
+
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
         }
 
         // 念のため完全に停止（解放）されていることを確認してから再生
@@ -58,7 +64,7 @@ export function useSpeech() {
       // const audio = new Audio(`/sounds/${text}.wav`);
       // audio.play();
     },
-    []
+    [voiceURI]
   );
 
   return { speak };
