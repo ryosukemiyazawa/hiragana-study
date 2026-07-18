@@ -30,6 +30,12 @@ h1 {
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+.build-time {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.7rem;
+  margin: -15px 0 10px 0;
+}
+
 /* 問題表示エリア */
 .word-display {
   background: white;
@@ -593,8 +599,31 @@ h1 {
   transform: scale(1.05);
 }
 
-/* レスポンシブ対応 */
-@media (max-width: 800px) {
+/* レスポンシブ対応 - タブレット */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .hiragana-cell {
+    width: 48px;
+    height: 48px;
+    font-size: 1.6rem;
+  }
+
+  .gyo-label {
+    width: 48px;
+    height: 28px;
+  }
+
+  .gyo-label.small-label {
+    width: 48px;
+  }
+
+  .dan-label {
+    width: 28px;
+    height: 48px;
+  }
+}
+
+/* レスポンシブ対応 - スマートフォン */
+@media (max-width: 600px) {
   h1 {
     font-size: 1.5rem;
   }

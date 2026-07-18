@@ -8,4 +8,7 @@ export default defineConfig({
   build: {
     outDir: 'docs',
   },
+  define: {
+    __BUILD_TIME__: JSON.stringify(new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })),
+  },
 })

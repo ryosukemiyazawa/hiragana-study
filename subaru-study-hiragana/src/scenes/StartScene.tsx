@@ -72,6 +72,7 @@ export function StartScene({ onStart }: StartSceneProps) {
   return (
     <div className="game-container">
       <h1>ひらがながくしゅう</h1>
+      <p className="build-time">{__BUILD_TIME__}</p>
       <div className="start-area">
         <div className="input-display">
           {inputChars.length > 0 && (
