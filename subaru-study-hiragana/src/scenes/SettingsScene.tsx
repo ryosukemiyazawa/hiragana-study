@@ -38,10 +38,10 @@ export function SettingsScene({
     };
 
     loadVoices();
-    speechSynthesis.addEventListener('voiceschanged', loadVoices);
+    //speechSynthesis.addEventListener('voiceschanged', loadVoices);
 
     return () => {
-      speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+      //speechSynthesis.removeEventListener('voiceschanged', loadVoices);
     };
   }, []);
 
