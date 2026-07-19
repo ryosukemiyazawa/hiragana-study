@@ -30,7 +30,7 @@ function App() {
   } = useGame();
 
   const { stats, recordCorrect, recordWrong, resetStats } = useStats();
-  const { settings, setVoiceURI } = useSettings();
+  const { settings, setVoiceURI, setSpeechRate } = useSettings();
 
   const handleStart = useCallback(() => {
     startGame();
@@ -72,7 +72,9 @@ function App() {
     return (
       <SettingsScene
         currentVoiceURI={settings.voiceURI}
+        currentSpeechRate={settings.speechRate}
         onVoiceChange={setVoiceURI}
+        onSpeechRateChange={setSpeechRate}
         onBack={handleSettingsBack}
       />
     );
@@ -85,6 +87,7 @@ function App() {
         onShowStats={handleShowStats}
         onShowSettings={handleShowSettings}
         voiceURI={settings.voiceURI}
+        speechRate={settings.speechRate}
       />
     );
   }
@@ -106,6 +109,7 @@ function App() {
       recordWrong={recordWrong}
       incrementWrongCount={incrementWrongCount}
       voiceURI={settings.voiceURI}
+      speechRate={settings.speechRate}
     />
   );
 }

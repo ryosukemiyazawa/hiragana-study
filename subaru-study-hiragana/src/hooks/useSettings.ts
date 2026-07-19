@@ -2,12 +2,14 @@ import { useState, useCallback, useEffect } from 'react';
 
 export interface Settings {
   voiceURI: string | null; // 選択中のVoice URI (nullはデフォルト)
+  speechRate: number; // 読み上げ速度 (0.1〜1.0)
 }
 
 const STORAGE_KEY = 'hiragana-settings';
 
 const DEFAULT_SETTINGS: Settings = {
   voiceURI: null,
+  speechRate: 0.8,
 };
 
 function loadSettings(): Settings {
@@ -43,5 +45,14 @@ export function useSettings() {
     });
   }, []);
 
-  return { settings, setVoiceURI };
+  // 読み上げ速度を設定
+  const setSpeechRate = useCallback((speechRate: number) => {
+    setSettings(prev => {
+      const newSettings = { ...prev, speechRate };
+      saveSettings(newSettings);
+      return newSettings;
+    });
+  }, []);
+
+  return { settings, setVoiceURI, setSpeechRate };
 }

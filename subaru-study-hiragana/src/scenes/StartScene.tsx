@@ -9,10 +9,11 @@ interface StartSceneProps {
   onShowStats: () => void;
   onShowSettings: () => void;
   voiceURI: string | null;
+  speechRate: number;
 }
 
-export function StartScene({ onStart, onShowStats, onShowSettings, voiceURI }: StartSceneProps) {
-  const { speak } = useSpeech({ voiceURI });
+export function StartScene({ onStart, onShowStats, onShowSettings, voiceURI, speechRate }: StartSceneProps) {
+  const { speak } = useSpeech({ voiceURI, speechRate });
   const [inputChars, setInputChars] = useState<string[]>([]);
   const [showEmojiKeyboard, setShowEmojiKeyboard] = useState(false);
 

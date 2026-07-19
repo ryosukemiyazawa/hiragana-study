@@ -5,10 +5,11 @@ import { useCallback, useRef } from 'react';
 
 interface UseSpeechOptions {
   voiceURI?: string | null;
+  speechRate?: number;
 }
 
 export function useSpeech(options: UseSpeechOptions = {}) {
-  const { voiceURI = null } = options;
+  const { voiceURI = null, speechRate = 0.8 } = options;
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const speak = useCallback(
@@ -29,7 +30,7 @@ export function useSpeech(options: UseSpeechOptions = {}) {
         utteranceRef.current = utterance;
 
         utterance.lang = 'ja-JP';
-        utterance.rate = 0.8;
+        utterance.rate = speechRate;
         utterance.pitch = 1.2;
 
         // その場で最新の音声リストを取得
@@ -64,7 +65,7 @@ export function useSpeech(options: UseSpeechOptions = {}) {
       // const audio = new Audio(`/sounds/${text}.wav`);
       // audio.play();
     },
-    [voiceURI]
+    [voiceURI, speechRate]
   );
 
   return { speak };

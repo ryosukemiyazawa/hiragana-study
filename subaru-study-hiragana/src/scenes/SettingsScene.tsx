@@ -2,13 +2,30 @@ import { useState, useEffect, useCallback } from 'react';
 
 interface SettingsSceneProps {
   currentVoiceURI: string | null;
+  currentSpeechRate: number;
   onVoiceChange: (voiceURI: string | null) => void;
+  onSpeechRateChange: (rate: number) => void;
   onBack: () => void;
 }
 
-export function SettingsScene({ currentVoiceURI, onVoiceChange, onBack }: SettingsSceneProps) {
+// 速度の選択肢
+const SPEECH_RATE_OPTIONS = [
+  { value: 0.3, label: 'とてもおそい' },
+  { value: 0.5, label: 'おそい' },
+  { value: 0.8, label: 'ふつう' },
+  { value: 1.0, label: 'はやい' },
+];
+
+export function SettingsScene({
+  currentVoiceURI,
+  currentSpeechRate,
+  onVoiceChange,
+  onSpeechRateChange,
+  onBack,
+}: SettingsSceneProps) {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoiceURI, setSelectedVoiceURI] = useState<string | null>(currentVoiceURI);
+  const [selectedRate, setSelectedRate] = useState<number>(currentSpeechRate);
 
   // 利用可能な日本語Voice一覧を取得
   useEffect(() => {
@@ -37,7 +54,7 @@ export function SettingsScene({ currentVoiceURI, onVoiceChange, onBack }: Settin
     setTimeout(() => {
       const utterance = new SpeechSynthesisUtterance('こんにちは');
       utterance.lang = 'ja-JP';
-      utterance.rate = 0.8;
+      utterance.rate = selectedRate;
       utterance.pitch = 1.2;
 
       if (voiceURI) {
@@ -49,7 +66,30 @@ export function SettingsScene({ currentVoiceURI, onVoiceChange, onBack }: Settin
 
       speechSynthesis.speak(utterance);
     }, 50);
-  }, [onVoiceChange, voices]);
+  }, [onVoiceChange, voices, selectedRate]);
+
+  const handleRateSelect = useCallback((rate: number) => {
+    setSelectedRate(rate);
+    onSpeechRateChange(rate);
+
+    // 選択した速度でテスト再生
+    speechSynthesis.cancel();
+    setTimeout(() => {
+      const utterance = new SpeechSynthesisUtterance('こんにちは');
+      utterance.lang = 'ja-JP';
+      utterance.rate = rate;
+      utterance.pitch = 1.2;
+
+      if (selectedVoiceURI) {
+        const voice = voices.find(v => v.voiceURI === selectedVoiceURI);
+        if (voice) {
+          utterance.voice = voice;
+        }
+      }
+
+      speechSynthesis.speak(utterance);
+    }, 50);
+  }, [onSpeechRateChange, voices, selectedVoiceURI]);
 
   return (
     <div className="game-container">
@@ -93,6 +133,23 @@ export function SettingsScene({ currentVoiceURI, onVoiceChange, onBack }: Settin
             日本語の音声が見つかりません。デバイスの設定を確認してください。
           </p>
         )}
+      </div>
+
+      <div className="settings-section">
+        <h2>読み上げ速度</h2>
+        <p className="settings-description">読み上げの速さを選択してください</p>
+
+        <div className="voice-list">
+          {SPEECH_RATE_OPTIONS.map(option => (
+            <button
+              key={option.value}
+              className={`voice-item ${selectedRate === option.value ? 'active' : ''}`}
+              onClick={() => handleRateSelect(option.value)}
+            >
+              <span className="voice-name">{option.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

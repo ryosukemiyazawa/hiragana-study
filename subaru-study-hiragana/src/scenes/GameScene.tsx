@@ -21,6 +21,7 @@ interface GameSceneProps {
   recordWrong: (char: string) => void;
   incrementWrongCount: () => void;
   voiceURI: string | null;
+  speechRate: number;
 }
 
 export function GameScene({
@@ -39,8 +40,9 @@ export function GameScene({
   recordWrong,
   incrementWrongCount,
   voiceURI,
+  speechRate,
 }: GameSceneProps) {
-  const { speak } = useSpeech({ voiceURI });
+  const { speak } = useSpeech({ voiceURI, speechRate });
 
   const [showSkipButton, setShowSkipButton] = useState(false);
   const [revealedCells, setRevealedCells] = useState<Set<string>>(new Set());
